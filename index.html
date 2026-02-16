@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formateador de Código</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background-color: #2c3e50;
+            color: #ecf0f1;
+            padding: 1rem 1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 500;
+        }
+
+        .controls {
+            background-color: #34495e;
+            padding: .5rem 1rem;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        label {
+            color: #ecf0f1;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        select {
+            padding: 0.5rem 1rem;
+            border: 1px solid #7f8c8d;
+            border-radius: 4px;
+            background-color: #ecf0f1;
+            color: #2c3e50;
+            font-size: 0.9rem;
+            cursor: pointer;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        select:hover {
+            border-color: #3498db;
+        }
+
+        select:focus {
+            border-color: #3498db;
+        }
+
+        button {
+            padding: 0.5rem 1.5rem;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        button:active {
+            background-color: #21618c;
+        }
+
+        .container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background-color: white;
+            margin: 1rem;
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .panel-header {
+            background-color: #ecf0f1;
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid #bdc3c7;
+            font-weight: 500;
+            color: #2c3e50;
+            font-size: 0.9rem;
+        }
+
+        textarea {
+            flex: 1;
+            border: none;
+            padding: 1rem;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            resize: none;
+            outline: none;
+            background-color: #fafafa;
+            color: #2c3e50;
+        }
+
+        textarea::placeholder {
+            color: #8d7676;
+        }
+
+        #output {
+            background-color: #f8f9fa;
+        }
+
+        .status {
+            padding: 0.5rem 2rem;
+            background-color: #ecf0f1;
+            font-size: 0.85rem;
+            color: #7f8c8d;
+            border-top: 1px solid #bdc3c7;
+        }
+
+        .status.success {
+            background-color: #d5f4e6;
+            color: #27ae60;
+            text-align: center;
+        }
+
+        .status.error {
+            background-color: #fadbd8;
+            color: #c0392b;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: #ecf0f1;
+            margin: 10% auto;
+            padding: 2rem;
+            border: 1px solid #bdc3c7;
+            border-radius: 4px;
+            width: 40%;
+            max-width: 500px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .modal-header {
+            font-size: 1.3rem;
+            font-weight: 500;
+            color: #2c3e50;
+            margin-bottom: 1rem;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 0.5rem;
+        }
+
+        .modal-stats {
+            color: #2c3e50;
+            font-size: 0.95rem;
+            line-height: 1.8;
+        }
+
+        .modal-stats div {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #bdc3c7;
+        }
+
+        .modal-close {
+            background-color: #95a5a6;
+            margin-top: 1rem;
+            float: right;
+        }
+
+        .modal-close:hover {
+            background-color: #7f8c8d;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Formateador de Código</h1>
+    </header>
+
+    <div class="controls">
+        <label for="languageSelect">Tipo de código:</label>
+        <select id="languageSelect">
+            <option value="xml">XML</option>
+            <option value="json">JSON</option>
+            <option value="html">HTML / JSP</option>
+            <option value="java">Java</option>
+            <option value="javascript">JavaScript</option>
+        </select>
+        <button id="formatBtn">Formatear</button>
+        <button id="minifyBtn">Minificar</button>
+        <button id="validBtn">Validar</button>
+        <button id="statsBtn">Estadísticas</button>
+        <button id="downloadBtn">Descargar</button>
+        <button id="copyBtn">Copiar resultado</button>
+        <button id="clearBtn">Limpiar</button>
+    </div>
+
+    <div class="container">
+        <div class="panel">
+            <div class="panel-header">Código sin formato</div>
+            <textarea id="input" placeholder="Pegue aquí el código a formatear..."></textarea>
+        </div>
+
+        <div class="panel">
+            <div class="panel-header">Código formateado</div>
+            <textarea id="output" placeholder="El código formateado aparecerá aquí..." readonly></textarea>
+        </div>
+    </div>
+
+    <div class="status" id="status">Listo</div>
+
+    <div id="statsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">Estadísticas del Código</div>
+            <div class="modal-stats" id="statsContent"></div>
+            <button class="modal-close" onclick="closeStats()">Cerrar</button>
+        </div>
+    </div>
+
+    <script>
+        const inputArea = document.getElementById('input');
+        const outputArea = document.getElementById('output');
+        const languageSelect = document.getElementById('languageSelect');
+        const formatBtn = document.getElementById('formatBtn');
+        const minifyBtn = document.getElementById('minifyBtn');
+        const validBtn = document.getElementById('validBtn');
+        const statsBtn = document.getElementById('statsBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const copyBtn = document.getElementById('copyBtn');
+        const status = document.getElementById('status');
+        const statsModal = document.getElementById('statsModal');
+
+        function setStatus(message, type = '') {
+            status.textContent = message;
+            status.className = 'status ' + type;
+        }
+
+        function formatXML(xml) {
+            const PADDING = '  ';
+            const reg = /(>)(<)(\/*)/g;
+            let formatted = '';
+            let pad = 0;
+
+            xml = xml.replace(reg, '$1\n$2$3');
+            
+            xml.split('\n').forEach(node => {
+                let indent = 0;
+                if (node.match(/.+<\/\w[^>]*>$/)) {
+                    indent = 0;
+                } else if (node.match(/^<\/\w/) && pad > 0) {
+                    pad -= 1;
+                } else if (node.match(/^<\w[^>]*[^\/]>.*$/)) {
+                    indent = 1;
+                } else {
+                    indent = 0;
+                }
+
+                formatted += PADDING.repeat(pad) + node + '\n';
+                pad += indent;
+            });
+
+            return formatted.trim();
+        }
+
+        function formatJSON(json) {
+            const parsed = JSON.parse(json);
+            return JSON.stringify(parsed, null, 2);
+        }
+
+        function formatHTML(html) {
+            const PADDING = '  ';
+            const reg = /(>)(<)(\/*)/g;
+            let formatted = '';
+            let pad = 0;
+
+            html = html.replace(reg, '$1\n$2$3');
+            
+            html.split('\n').forEach(node => {
+                let indent = 0;
+                if (node.match(/.+<\/\w[^>]*>$/)) {
+                    indent = 0;
+                } else if (node.match(/^<\/\w/) && pad > 0) {
+                    pad -= 1;
+                } else if (node.match(/^<\w[^>]*[^\/]>.*$/)) {
+                    indent = 1;
+                } else {
+                    indent = 0;
+                }
+
+                formatted += PADDING.repeat(pad) + node + '\n';
+                pad += indent;
+            });
+
+            return formatted.trim();
+        }
+
+        function formatJava(code) {
+            const lines = code.split('\n');
+            let formatted = '';
+            let indentLevel = 0;
+            const INDENT = '    ';
+
+            lines.forEach(line => {
+                line = line.trim();
+                if (!line) return;
+
+                // Decrease indent for closing braces
+                if (line.startsWith('}')) {
+                    indentLevel = Math.max(0, indentLevel - 1);
+                }
+
+                // Add line with current indent
+                formatted += INDENT.repeat(indentLevel) + line + '\n';
+
+                // Increase indent for opening braces
+                if (line.endsWith('{')) {
+                    indentLevel++;
+                }
+            });
+
+            return formatted.trim();
+        }
+
+        function formatJavaScript(code) {
+            const lines = code.split('\n');
+            let formatted = '';
+            let indentLevel = 0;
+            const INDENT = '  ';
+
+            lines.forEach(line => {
+                line = line.trim();
+                if (!line) return;
+
+                // Decrease indent for closing braces
+                if (line.startsWith('}')) {
+                    indentLevel = Math.max(0, indentLevel - 1);
+                }
+
+                // Add line with current indent
+                formatted += INDENT.repeat(indentLevel) + line + '\n';
+
+                // Increase indent for opening braces
+                if (line.endsWith('{')) {
+                    indentLevel++;
+                }
+            });
+
+            return formatted.trim();
+        }
+
+        function formatCode() {
+            const input = inputArea.value.trim();
+            
+            if (!input) {
+                setStatus('Error: No hay código para formatear', 'error');
+                return;
+            }
+
+            const language = languageSelect.value;
+
+            try {
+                let formatted = '';
+
+                switch(language) {
+                    case 'xml':
+                        formatted = formatXML(input);
+                        break;
+                    case 'json':
+                        formatted = formatJSON(input);
+                        break;
+                    case 'html':
+                        formatted = formatHTML(input);
+                        break;
+                    case 'java':
+                        formatted = formatJava(input);
+                        break;
+                    case 'javascript':
+                        formatted = formatJavaScript(input);
+                        break;
+                }
+
+                outputArea.value = formatted;
+                setStatus('Código formateado correctamente', 'success');
+            } catch (error) {
+                setStatus('Error al formatear: ' + error.message, 'error');
+                outputArea.value = '';
+            }
+        }
+
+        function clearAll() {
+            inputArea.value = '';
+            outputArea.value = '';
+            setStatus('Listo', '');
+        }
+
+        function copyToClipboard() {
+            const output = outputArea.value;
+            
+            if (!output) {
+                setStatus('Error: No hay código formateado para copiar', 'error');
+                return;
+            }
+
+            navigator.clipboard.writeText(output).then(() => {
+                setStatus('Código copiado al portapapeles', 'success');
+            }).catch(() => {
+                setStatus('Error al copiar al portapapeles', 'error');
+            });
+        }
+
+        function minifyCode() {
+            const input = inputArea.value.trim();
+            
+            if (!input) {
+                setStatus('Error: No hay código para minificar', 'error');
+                return;
+            }
+
+            const language = languageSelect.value;
+
+            try {
+                let minified = '';
+
+                if (language === 'json') {
+                    const parsed = JSON.parse(input);
+                    minified = JSON.stringify(parsed);
+                } else {
+                    minified = input
+                        .replace(/\s+/g, ' ')
+                        .replace(/\s*([{}\[\];:,])\s*/g, '$1')
+                        .replace(/;\s*}/g, '}')
+                        .trim();
+                }
+
+                outputArea.value = minified;
+                setStatus('Código minificado correctamente', 'success');
+            } catch (error) {
+                setStatus('Error al minificar: ' + error.message, 'error');
+                outputArea.value = '';
+            }
+        }
+
+        function validateCode() {
+            const input = inputArea.value.trim();
+            
+            if (!input) {
+                setStatus('Error: No hay código para validar', 'error');
+                return;
+            }
+
+            const language = languageSelect.value;
+
+            try {
+                switch(language) {
+                    case 'json':
+                        JSON.parse(input);
+                        break;
+                    case 'xml':
+                    case 'html':
+                        // Validación básica de etiquetas
+                        const openTags = (input.match(/<\w+/g) || []).length;
+                        const closeTags = (input.match(/<\/\w+>/g) || []).length;
+                        if (openTags !== closeTags) {
+                            throw new Error(`Mismatch de etiquetas (abiertas: ${openTags}, cerradas: ${closeTags})`);
+                        }
+                        break;
+                }
+                
+                setStatus('✓ Código válido', 'success');
+                outputArea.value = '✓ El código es válido';
+            } catch (error) {
+                setStatus('✗ Error de validación: ' + error.message, 'error');
+                outputArea.value = '✗ ' + error.message;
+            }
+        }
+
+        function showStatistics() {
+            const input = inputArea.value;
+            const output = outputArea.value;
+
+            const inputLines = input.split('\n').length;
+            const inputChars = input.length;
+            const inputWords = input.trim().split(/\s+/).filter(w => w.length > 0).length;
+
+            const outputLines = output.split('\n').length;
+            const outputChars = output.length;
+            const reduction = inputChars > 0 ? Math.round((1 - outputChars / inputChars) * 100) : 0;
+
+            const statsContent = document.getElementById('statsContent');
+            statsContent.innerHTML = `
+                <div><strong>Código Original:</strong></div>
+                <div><span>Líneas:</span><span>${inputLines}</span></div>
+                <div><span>Caracteres:</span><span>${inputChars}</span></div>
+                <div><span>Palabras:</span><span>${inputWords}</span></div>
+                <br>
+                <div><strong>Código Procesado:</strong></div>
+                <div><span>Líneas:</span><span>${outputLines}</span></div>
+                <div><span>Caracteres:</span><span>${outputChars}</span></div>
+                <div><span>Reducción:</span><span>${reduction}%</span></div>
+            `;
+
+            statsModal.style.display = 'block';
+        }
+
+        function closeStats() {
+            statsModal.style.display = 'none';
+        }
+
+        function downloadCode() {
+            const output = outputArea.value;
+            
+            if (!output) {
+                setStatus('Error: No hay código para descargar', 'error');
+                return;
+            }
+
+            const language = languageSelect.value;
+            const extensions = {
+                'xml': '.xml',
+                'json': '.json',
+                'html': '.html',
+                'java': '.java',
+                'javascript': '.js'
+            };
+
+            const element = document.createElement('a');
+            element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(output));
+            element.setAttribute('download', 'codigo' + extensions[language]);
+            element.style.display = 'none';
+            document.body.appendChild(element);
+            element.click();
+            document.body.removeChild(element);
+
+            setStatus('Archivo descargado correctamente', 'success');
+        }
+
+        window.onclick = function(event) {
+            if (event.target == statsModal) {
+                statsModal.style.display = 'none';
+            }
+        }
+        formatBtn.addEventListener('click', formatCode);
+        minifyBtn.addEventListener('click', minifyCode);
+        validBtn.addEventListener('click', validateCode);
+        statsBtn.addEventListener('click', showStatistics);
+        downloadBtn.addEventListener('click', downloadCode);
+        copyBtn.addEventListener('click', copyToClipboard);
+        clearBtn.addEventListener('click', clearAll);
+
+        inputArea.addEventListener('paste', () => {
+            setTimeout(formatCode, 100);
+        });
+        inputArea.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.key === 'Enter') {
+                formatCode();
+            }
+        });
+    </script>
+</body>
+</html>
