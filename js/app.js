@@ -43,9 +43,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let currentOutput = '';
 
-    // ==========================================
-    // 1. GESTIÓN DE TEMA Y PREFERENCIAS
-    // ==========================================
     function initPreferences() {
         // Tema
         const savedTheme = localStorage.getItem('theme');
@@ -86,9 +83,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // ==========================================
-    // 2. RESALTADO Y SALIDA DE CÓDIGO
-    // ==========================================
     function getPrismLanguage(lang) {
         const map = {
             'xml': 'markup',
@@ -131,9 +125,6 @@ document.addEventListener('DOMContentLoaded', () => {
         status.className = 'status ' + type;
     }
 
-    // ==========================================
-    // 3. ACCIONES PRINCIPALES
-    // ==========================================
     function formatCode() {
         const input = inputArea.value.trim();
         
@@ -300,9 +291,6 @@ document.addEventListener('DOMContentLoaded', () => {
         setStatus(`✓ Archivo '${filename}' descargado correctamente`, 'success');
     }
 
-    // ==========================================
-    // 4. CONVERSIÓN ENTRE FORMATOS
-    // ==========================================
     function openConvertModal() {
         convertModal.style.display = 'block';
     }
@@ -351,9 +339,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // ==========================================
-    // 5. DRAG & DROP DE ARCHIVOS
-    // ==========================================
     function setupDragAndDrop() {
         const dropZone = inputPanel;
 
@@ -409,9 +394,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // ==========================================
-    // 6. DETECCIÓN AUTOMÁTICA AL PEGAR
-    // ==========================================
+
     inputArea.addEventListener('paste', () => {
         setTimeout(() => {
             const code = inputArea.value;
@@ -424,9 +407,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 150);
     });
 
-    // ==========================================
-    // 7. PANTALLA COMPLETA / MAXIMIZAR PANELES
-    // ==========================================
+
     function toggleFullscreen(panel, btn) {
         const isFull = panel.classList.toggle('fullscreen');
         btn.textContent = isFull ? '✕' : '⛶';
@@ -450,9 +431,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // ==========================================
-    // 8. EVENT LISTENERS GENERALES
-    // ==========================================
     formatBtn.addEventListener('click', formatCode);
     minifyBtn.addEventListener('click', minifyCode);
     validBtn.addEventListener('click', validateCode);
@@ -493,9 +471,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // ==========================================
-    // 9. REGISTRO PWA (SERVICE WORKER)
-    // ==========================================
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
             navigator.serviceWorker.register('./sw.js')
