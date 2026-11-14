@@ -3,55 +3,91 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Formateador de Código</title>
+    <title>Formateador de Código Pro</title>
+    
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/svg+xml" href="icons/icon.svg">
+    <meta name="theme-color" content="#1e293b">
+    <meta name="description" content="Formateador, validador, minificador y convertidor de código rápido con resaltado de sintaxis tipo IDE.">
+
+    <!-- Prism.js Line Numbers CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.css">
+    
     <!-- Estilos de la aplicación -->
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
     <header>
-        <h1>Formateador de Código</h1>
+        <div class="header-title-wrap">
+            <img src="icons/icon.svg" alt="Logo" class="header-logo">
+            <h1>Formateador de Código</h1>
+        </div>
+        <div class="header-badges">
+            <span>Offline Ready (PWA) • IDE Syntax</span>
+        </div>
     </header>
 
     <div class="controls">
-        <label for="languageSelect">Tipo de código:</label>
-        <select id="languageSelect">
-            <option value="xml">XML</option>
-            <option value="json">JSON</option>
-            <option value="html">HTML / JSP</option>
-            <option value="java">Java</option>
-            <option value="javascript">JavaScript</option>
-        </select>
-        <button id="formatBtn">Formatear</button>
-        <button id="minifyBtn" class="btn-secondary">Minificar</button>
-        <button id="validBtn" class="btn-secondary">Validar</button>
-        <button id="statsBtn" class="btn-secondary">Estadísticas</button>
-        <button id="downloadBtn" class="btn-secondary">Descargar</button>
-        <button id="copyBtn">Copiar resultado</button>
-        <button id="clearBtn" class="btn-secondary">Limpiar</button>
-        <button id="themeToggleBtn" type="button">🌙 Modo Oscuro</button>
+        <div class="control-group">
+            <label for="languageSelect">Lenguaje:</label>
+            <select id="languageSelect">
+                <option value="xml">XML</option>
+                <option value="json">JSON</option>
+                <option value="html">HTML / JSP</option>
+                <option value="sql">SQL</option>
+                <option value="java">Java</option>
+                <option value="javascript">JavaScript</option>
+            </select>
+        </div>
+
+        <div class="control-group">
+            <label for="indentSelect">Indent:</label>
+            <select id="indentSelect" title="Tamaño de indentación">
+                <option value="2">2 esp</option>
+                <option value="4" selected>4 esp</option>
+                <option value="tab">Tab</option>
+            </select>
+        </div>
+
+        <button id="formatBtn" title="Formatear código">Formatear</button>
+        <button id="minifyBtn" class="btn-secondary" title="Minificar código en una línea">Minificar</button>
+        <button id="validBtn" class="btn-secondary" title="Validar sintaxis básica">Validar</button>
+        <button id="convertBtn" class="btn-special" title="Convertir formato (JSON / XML)">Convertir ⇄</button>
+        <button id="statsBtn" class="btn-secondary" title="Ver métricas y reducción de tamaño">Estadísticas</button>
+        <button id="downloadBtn" class="btn-secondary" title="Descargar como archivo">Descargar</button>
+        <button id="copyBtn" title="Copiar al portapapeles">Copiar resultado</button>
+        <button id="clearBtn" class="btn-secondary" title="Limpiar todo">Limpiar</button>
+        <button id="themeToggleBtn" type="button" title="Alternar tema">🌙 Oscuro</button>
     </div>
 
     <div class="container">
-        <!-- Panel Izquierdo: Entrada -->
-        <div class="panel">
+        <!-- Panel Izquierdo: Entrada con Drag & Drop -->
+        <div class="panel" id="inputPanel">
             <div class="panel-header">
                 <span>Código sin formato</span>
-                <span style="font-size: 0.78rem; opacity: 0.75;">(Ctrl + Enter para formatear)</span>
+                <div class="panel-header-actions">
+                    <span style="font-size: 0.78rem; opacity: 0.75;">(Arrastra un archivo o Ctrl+Enter)</span>
+                    <button class="panel-icon-btn" id="expandInputBtn" title="Pantalla completa">⛶</button>
+                </div>
             </div>
             <div class="panel-body">
-                <textarea id="input" placeholder="Pegue aquí el código a formatear..."></textarea>
+                <textarea id="input" placeholder="Pegue aquí el código o arrastre un archivo (.json, .xml, .sql, .js, .java)..."></textarea>
             </div>
         </div>
 
-        <!-- Panel Derecho: Salida con Resaltado IDE -->
-        <div class="panel">
+        <!-- Panel Derecho: Salida con Resaltado IDE y Líneas -->
+        <div class="panel" id="outputPanel">
             <div class="panel-header">
                 <span>Código formateado</span>
-                <span style="font-size: 0.78rem; opacity: 0.75;">Resaltado de sintaxis</span>
+                <div class="panel-header-actions">
+                    <span style="font-size: 0.78rem; opacity: 0.75;">Resaltado con líneas</span>
+                    <button class="panel-icon-btn" id="expandOutputBtn" title="Pantalla completa">⛶</button>
+                </div>
             </div>
             <div class="panel-body code-viewer-container" id="outputContainer">
-                <div id="outputPlaceholder" class="empty-placeholder">El código formateado aparecerá aquí con colores tipo IDE...</div>
-                <pre><code id="outputCode" style="display: none;"></code></pre>
+                <div id="outputPlaceholder" class="empty-placeholder">El código formateado aparecerá aquí con números de línea y colores tipo IDE...</div>
+                <pre id="preContainer" class="line-numbers" style="display: none;"><code id="outputCode"></code></pre>
             </div>
         </div>
     </div>
@@ -67,6 +103,35 @@
         </div>
     </div>
 
+    <!-- Modal de Conversión de Formato -->
+    <div id="convertModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">Conversión de Formatos</div>
+            <p style="font-size: 0.88rem; color: var(--text-muted);">Convierte el código del panel de entrada al formato seleccionado:</p>
+            <div class="convert-options-grid">
+                <button id="convertJsonToXmlBtn" class="convert-option-btn">JSON ➔ XML</button>
+                <button id="convertXmlToJsonBtn" class="convert-option-btn btn-special">XML ➔ JSON</button>
+            </div>
+            <button id="convertCloseBtn" class="modal-close">Cancelar</button>
+        </div>
+    </div>
+
+    <!-- Modal de Descarga de Archivo -->
+    <div id="downloadModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">Descargar Archivo</div>
+            <p style="font-size: 0.88rem; color: var(--text-muted);">Personaliza el nombre del archivo o haz clic en <strong>Aceptar</strong> para usar el nombre sugerido:</p>
+            <div class="download-input-wrap">
+                <input type="text" id="downloadFilenameInput" placeholder="Nombre del archivo" autocomplete="off" spellcheck="false">
+                <span id="downloadExtensionBadge" class="extension-badge">.js</span>
+            </div>
+            <div class="modal-actions">
+                <button id="downloadCancelBtn" class="btn-secondary">Cancelar</button>
+                <button id="downloadConfirmBtn">Aceptar y Descargar</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Prism.js (Syntax Highlighting ligero vía CDN) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-markup.min.js"></script>
@@ -74,6 +139,11 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-clike.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-java.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-sql.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.js"></script>
+
+    <!-- JS-Beautify para formateo robusto de JS / Java -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-beautify/1.14.9/beautify.min.js"></script>
 
     <!-- Scripts de la aplicación -->
     <script src="js/formatters.js"></script>
