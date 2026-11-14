@@ -10,6 +10,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const outputCode = document.getElementById('outputCode');
     const outputPlaceholder = document.getElementById('outputPlaceholder');
     
+    // Historial
+    const historyToggleBtn = document.getElementById('historyToggleBtn');
+    const historyCount = document.getElementById('historyCount');
+    const historyDrawer = document.getElementById('historyDrawer');
+    const closeHistoryBtn = document.getElementById('closeHistoryBtn');
+    const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+    const historyList = document.getElementById('historyList');
+
     // Selectores y Controles
     const languageSelect = document.getElementById('languageSelect');
     const indentSelect = document.getElementById('indentSelect');
@@ -140,6 +148,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const formatted = Formatters.format(input, language, indentType);
             updateOutput(formatted);
             setStatus('✓ Código formateado correctamente', 'success');
+            guardarEnHistorial(input, language);
         } catch (error) {
             setStatus('✗ Error al formatear: ' + error.message, 'error');
             updateOutput('Error al formatear: ' + error.message, true);
@@ -417,6 +426,162 @@ document.addEventListener('DOMContentLoaded', () => {
     expandInputBtn.addEventListener('click', () => toggleFullscreen(inputPanel, expandInputBtn));
     expandOutputBtn.addEventListener('click', () => toggleFullscreen(outputPanel, expandOutputBtn));
 
+    const CLAVE_HISTORIAL = 'code_formatter_history';
+    const MAXIMO_ELEMENTOS_HISTORIAL = 25;
+
+    // Obtiene los textos guardados desde localStorage
+    function obtenerHistorial() {
+        try {
+            return JSON.parse(localStorage.getItem(CLAVE_HISTORIAL)) || [];
+        } catch (error) {
+            return [];
+        }
+    }
+
+    // Guarda una copia del código formateado en el historial local
+    function guardarEnHistorial(codigoEntrada, lenguaje) {
+        if (!codigoEntrada || codigoEntrada.trim().length === 0) return;
+        const historial = obtenerHistorial();
+        
+        // Evita duplicar si el código y lenguaje son idénticos al último registro
+        if (historial.length > 0 && historial[0].codigoEntrada === codigoEntrada && historial[0].lenguaje === lenguaje) {
+            return;
+        }
+
+        const registro = {
+            id: 'hist_' + Date.now(),
+            marcaTiempo: Date.now(),
+            lenguaje: lenguaje,
+            codigoEntrada: codigoEntrada,
+            vistaPrevia: codigoEntrada.trim().slice(0, 100).replace(/\s+/g, ' '),
+            totalCaracteres: codigoEntrada.length,
+            totalLineas: codigoEntrada.split('\n').length
+        };
+
+        historial.unshift(registro);
+        if (historial.length > MAXIMO_ELEMENTOS_HISTORIAL) historial.pop();
+
+        try {
+            localStorage.setItem(CLAVE_HISTORIAL, JSON.stringify(historial));
+        } catch (error) {
+            console.warn('Error al guardar historial:', error);
+        }
+        renderizarHistorial();
+    }
+
+    // Calcula una descripción legible del tiempo transcurrido
+    function formatearTiempoRelativo(marcaTiempo) {
+        const segundosTranscurridos = Math.floor((Date.now() - marcaTiempo) / 1000);
+        if (segundosTranscurridos < 60) return 'Hace un momento';
+        const minutosTranscurridos = Math.floor(segundosTranscurridos / 60);
+        if (minutosTranscurridos < 60) return `Hace ${minutosTranscurridos}m`;
+        const horasTranscurridas = Math.floor(minutosTranscurridos / 60);
+        if (horasTranscurridas < 24) return `Hace ${horasTranscurridas}h`;
+        const fecha = new Date(marcaTiempo);
+        return `${fecha.getDate()}/${fecha.getMonth() + 1} ${String(fecha.getHours()).padStart(2, '0')}:${String(fecha.getMinutes()).padStart(2, '0')}`;
+    }
+
+    // Dibuja las tarjetas del historial en el panel desplegable
+    function renderizarHistorial() {
+        const historial = obtenerHistorial();
+        if (historyCount) historyCount.textContent = historial.length;
+
+        if (!historyList) return;
+
+        if (historial.length === 0) {
+            historyList.innerHTML = `
+                <div class="history-empty">
+                    No hay textos guardados en el historial aún.<br>
+                    <span style="font-size:0.75rem; opacity:0.8;">Se guardarán automáticamente cada vez que formatees.</span>
+                </div>
+            `;
+            return;
+        }
+
+        historyList.innerHTML = '';
+        historial.forEach(registro => {
+            const tarjeta = document.createElement('div');
+            tarjeta.className = 'history-item';
+            tarjeta.title = 'Haz clic para cargar este código';
+
+            tarjeta.innerHTML = `
+                <div class="history-item-top">
+                    <span class="history-lang-badge">${registro.lenguaje.toUpperCase()}</span>
+                    <span class="history-time">${formatearTiempoRelativo(registro.marcaTiempo)}</span>
+                    <button class="history-delete-item-btn" title="Eliminar este elemento">🗑️</button>
+                </div>
+                <div class="history-item-preview">${escaparCaracteresHtml(registro.vistaPrevia)}</div>
+                <div class="history-item-meta">
+                    <span>${registro.totalLineas} líneas</span>
+                    <span>${registro.totalCaracteres} caracteres</span>
+                </div>
+            `;
+
+            // Cargar el código seleccionado en el editor
+            tarjeta.addEventListener('click', (evento) => {
+                if (evento.target.closest('.history-delete-item-btn')) return;
+
+                inputArea.value = registro.codigoEntrada;
+                languageSelect.value = registro.lenguaje;
+                formatCode();
+                cerrarPanelHistorial();
+                setStatus(`✓ Código '${registro.lenguaje.toUpperCase()}' cargado del historial`, 'success');
+            });
+
+            // Eliminar elemento puntual del historial
+            const botonEliminar = tarjeta.querySelector('.history-delete-item-btn');
+            botonEliminar.addEventListener('click', (evento) => {
+                evento.stopPropagation();
+                eliminarElementoHistorial(registro.id);
+            });
+
+            historyList.appendChild(tarjeta);
+        });
+    }
+
+    // Escapa caracteres especiales para inserción segura en el DOM
+    function escaparCaracteresHtml(cadena) {
+        return cadena
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
+
+    // Elimina un registro individual por su identificador
+    function eliminarElementoHistorial(idElemento) {
+        let historial = obtenerHistorial();
+        historial = historial.filter(registro => registro.id !== idElemento);
+        try {
+            localStorage.setItem(CLAVE_HISTORIAL, JSON.stringify(historial));
+        } catch (error) {}
+        renderizarHistorial();
+        setStatus('Texto eliminado del historial', '');
+    }
+
+    // Vacía todos los registros del historial tras confirmación
+    function vaciarTodoElHistorial() {
+        const historial = obtenerHistorial();
+        if (historial.length === 0) return;
+        if (confirm('¿Estás seguro de que deseas vaciar todo el historial de textos?')) {
+            localStorage.removeItem(CLAVE_HISTORIAL);
+            renderizarHistorial();
+            setStatus('Historial de textos vaciado', '');
+        }
+    }
+
+    function alternarPanelHistorial() {
+        historyDrawer.classList.toggle('open');
+    }
+
+    function cerrarPanelHistorial() {
+        historyDrawer.classList.remove('open');
+    }
+
+    historyToggleBtn.addEventListener('click', alternarPanelHistorial);
+    closeHistoryBtn.addEventListener('click', cerrarPanelHistorial);
+    clearHistoryBtn.addEventListener('click', vaciarTodoElHistorial);
+
     window.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
             if (inputPanel.classList.contains('fullscreen')) {
@@ -428,6 +593,7 @@ document.addEventListener('DOMContentLoaded', () => {
             closeStats();
             closeConvertModal();
             closeDownloadModal();
+            cerrarPanelHistorial();
         }
     });
 
@@ -482,4 +648,5 @@ document.addEventListener('DOMContentLoaded', () => {
     // Inicializaciones
     initPreferences();
     setupDragAndDrop();
+    renderizarHistorial();
 });

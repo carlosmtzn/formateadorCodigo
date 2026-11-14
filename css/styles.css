@@ -289,6 +289,171 @@ button#themeToggleBtn {
     flex-direction: column;
 }
 
+/* Botón de Historial en Header */
+.history-pill-btn {
+    font-size: 0.78rem !important;
+    padding: 0.2rem 0.55rem !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 12px !important;
+    background-color: var(--bg-surface) !important;
+    color: var(--text-main) !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 0.25rem !important;
+    cursor: pointer !important;
+    font-weight: 500 !important;
+}
+
+.history-pill-btn:hover {
+    border-color: var(--accent-btn) !important;
+    color: var(--accent-btn) !important;
+}
+
+/* Drawer / Panel Desplegable de Historial tipo Chat */
+.history-drawer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: var(--bg-surface);
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    transform: translateX(-100%);
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 4px 0 15px rgba(0, 0, 0, 0.15);
+}
+
+.history-drawer.open {
+    transform: translateX(0);
+}
+
+.history-drawer-header {
+    padding: 0.6rem 0.9rem;
+    background-color: var(--panel-header-bg);
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.history-drawer-title {
+    font-weight: 600;
+    font-size: 0.88rem;
+    color: var(--text-main);
+}
+
+.history-drawer-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.history-action-btn {
+    padding: 0.25rem 0.55rem;
+    font-size: 0.78rem;
+    background-color: var(--btn-secondary);
+    border-radius: 4px;
+}
+
+.history-action-btn:hover {
+    background-color: var(--btn-secondary-hover);
+}
+
+.history-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0.65rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+}
+
+.history-item {
+    background-color: var(--code-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 0.6rem 0.75rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.history-item:hover {
+    border-color: var(--accent-btn);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transform: translateY(-1px);
+}
+
+.history-item-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.history-lang-badge {
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 0.1rem 0.4rem;
+    border-radius: 4px;
+    background-color: var(--accent-btn);
+    color: white;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.history-time {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    flex: 1;
+    margin-left: 0.5rem;
+}
+
+.history-delete-item-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 0.15rem 0.35rem;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    line-height: 1;
+}
+
+.history-delete-item-btn:hover {
+    color: var(--status-error-text);
+    background-color: var(--status-error-bg);
+}
+
+.history-item-preview {
+    font-family: 'Cascadia Code', 'Consolas', monospace;
+    font-size: 0.8rem;
+    color: var(--text-main);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.4;
+    opacity: 0.9;
+}
+
+.history-item-meta {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    display: flex;
+    justify-content: space-between;
+}
+
+.history-empty {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    font-style: italic;
+    padding: 2.5rem 1rem;
+}
+
 textarea {
     flex: 1;
     width: 100%;

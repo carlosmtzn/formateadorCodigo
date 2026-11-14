@@ -65,13 +65,28 @@
         <!-- Panel Izquierdo: Entrada con Drag & Drop -->
         <div class="panel" id="inputPanel">
             <div class="panel-header">
-                <span>Código sin formato</span>
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <span>Código sin formato</span>
+                    <button class="panel-icon-btn history-pill-btn" id="historyToggleBtn" title="Ver historial de textos">🕒 Historial (<span id="historyCount">0</span>)</button>
+                </div>
                 <div class="panel-header-actions">
                     <span style="font-size: 0.78rem; opacity: 0.75;">(Arrastra un archivo o Ctrl+Enter)</span>
                     <button class="panel-icon-btn" id="expandInputBtn" title="Pantalla completa">⛶</button>
                 </div>
             </div>
             <div class="panel-body">
+                <!-- Drawer / Desplegable de Historial tipo Chat -->
+                <div id="historyDrawer" class="history-drawer">
+                    <div class="history-drawer-header">
+                        <span class="history-drawer-title">📜 Historial de Código</span>
+                        <div class="history-drawer-actions">
+                            <button id="clearHistoryBtn" class="history-action-btn" title="Vaciar todo el historial">🗑️ Vaciar</button>
+                            <button id="closeHistoryBtn" class="history-action-btn" title="Cerrar historial">✕</button>
+                        </div>
+                    </div>
+                    <div id="historyList" class="history-list"></div>
+                </div>
+
                 <textarea id="input" placeholder="Pegue aquí el código o arrastre un archivo (.json, .xml, .sql, .js, .java)..."></textarea>
             </div>
         </div>

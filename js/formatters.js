@@ -348,9 +348,7 @@ const Formatters = {
         }
     },
 
-    // ==========================================
-    // CONVERSIÓN ENTRE FORMATOS (JSON <-> XML)
-    // ==========================================
+
     jsonToXml(jsonStr, indentType = '4') {
         const data = JSON.parse(jsonStr);
         const indentStr = this.getIndentStr(indentType);
@@ -445,9 +443,6 @@ const Formatters = {
         return JSON.stringify(resultObj, null, indent);
     },
 
-    // ==========================================
-    // DETECCIÓN AUTOMÁTICA DE LENGUAJE
-    // ==========================================
     detectLanguage(code) {
         const trimmed = code.trim();
         if (!trimmed) return null;
