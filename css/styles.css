@@ -502,8 +502,40 @@ code[class*="language-"] {
     color: var(--code-color) !important;
     text-shadow: none !important;
     font-family: inherit !important;
-    white-space: pre-wrap !important;
-    word-break: break-all !important;
+    white-space: pre !important;
+    word-break: normal !important;
+    display: block !important;
+    min-width: 100% !important;
+    width: max-content !important;
+}
+
+/* Fila interactiva para resaltado y selección */
+.fila-codigo {
+    display: inline-block;
+    min-width: 100%;
+    cursor: pointer;
+    box-sizing: border-box;
+    padding: 0 4px;
+    border-radius: 2px;
+    transition: background-color 0.12s ease;
+}
+
+.fila-codigo:hover {
+    background-color: rgba(59, 130, 246, 0.12);
+}
+
+.fila-codigo.fila-seleccionada {
+    background-color: rgba(234, 179, 8, 0.22) !important;
+    box-shadow: inset 3px 0 0 #f59e0b;
+}
+
+[data-theme="dark"] .fila-codigo:hover {
+    background-color: rgba(59, 130, 246, 0.18);
+}
+
+[data-theme="dark"] .fila-codigo.fila-seleccionada {
+    background-color: rgba(234, 179, 8, 0.28) !important;
+    box-shadow: inset 3px 0 0 #fbbf24;
 }
 
 /* Números de línea */
@@ -515,6 +547,23 @@ pre.line-numbers {
 .line-numbers .line-numbers-rows {
     border-right: 1px solid var(--border-color) !important;
     padding-right: 0.5rem;
+}
+
+.line-numbers-rows > span {
+    cursor: pointer;
+    transition: color 0.15s ease;
+}
+
+.line-numbers-rows > span:hover:before {
+    color: var(--accent-btn) !important;
+    opacity: 1 !important;
+    font-weight: 700;
+}
+
+.line-numbers-rows > span.numero-linea-seleccionado:before {
+    color: #f59e0b !important;
+    opacity: 1 !important;
+    font-weight: 700;
 }
 
 .line-numbers-rows > span:before {
@@ -693,6 +742,119 @@ pre.line-numbers {
     justify-content: flex-end;
     gap: 0.6rem;
     margin-top: 1.2rem;
+}
+
+/* Barra Flotante de Búsqueda */
+.search-bar-floating {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    z-index: 30;
+    background-color: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.35rem 0.5rem;
+}
+
+#campoBusqueda {
+    border: 1px solid var(--border-color);
+    background-color: var(--code-bg);
+    color: var(--text-main);
+    font-size: 0.82rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    outline: none;
+    width: 175px;
+}
+
+#campoBusqueda:focus {
+    border-color: var(--accent-btn);
+}
+
+.search-counter {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    min-width: 32px;
+    text-align: center;
+    user-select: none;
+}
+
+.search-nav-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-main);
+    cursor: pointer;
+    padding: 0.2rem 0.4rem;
+    font-size: 0.75rem;
+    border-radius: 3px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.search-nav-btn:hover {
+    background-color: var(--panel-header-bg);
+}
+
+.coincidencia-busqueda {
+    background-color: rgba(234, 179, 8, 0.35);
+    color: inherit;
+    border-radius: 2px;
+}
+
+.coincidencia-activa {
+    background-color: #f59e0b !important;
+    color: #000000 !important;
+    font-weight: 700;
+    outline: 2px solid #d97706;
+}
+
+/* Visor del Modo Diff */
+.diff-viewer-container {
+    flex: 1;
+    overflow: auto;
+    background-color: var(--code-bg);
+    padding: 0.85rem;
+    font-family: 'Cascadia Code', 'Consolas', monospace;
+    font-size: 0.88rem;
+    line-height: 1.55;
+}
+
+.linea-diff {
+    display: flex;
+    gap: 0.5rem;
+    padding: 0.15rem 0.35rem;
+    white-space: pre-wrap;
+    word-break: break-all;
+    border-radius: 2px;
+}
+
+.linea-diff.agregada {
+    background-color: rgba(34, 197, 94, 0.15);
+    color: var(--status-success-text);
+}
+
+.linea-diff.eliminada {
+    background-color: rgba(239, 68, 68, 0.15);
+    color: var(--status-error-text);
+    text-decoration: line-through;
+    opacity: 0.85;
+}
+
+.linea-diff.igual {
+    color: var(--code-color);
+    opacity: 0.85;
+}
+
+.signo-diff {
+    font-weight: 700;
+    min-width: 1.1rem;
+    user-select: none;
+    opacity: 0.75;
 }
 
 /* Responsive para Móviles */

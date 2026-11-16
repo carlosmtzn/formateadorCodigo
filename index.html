@@ -53,9 +53,10 @@
         <button id="formatBtn" title="Formatear código">Formatear</button>
         <button id="minifyBtn" class="btn-secondary" title="Minificar código en una línea">Minificar</button>
         <button id="validBtn" class="btn-secondary" title="Validar sintaxis básica">Validar</button>
+        <button id="botonModoDiff" class="btn-secondary" title="Comparar diferencias entre entrada y salida">Modo Diff</button>
         <button id="convertBtn" class="btn-special" title="Convertir formato (JSON / XML)">Convertir ⇄</button>
-        <button id="downloadBtn" class="btn-secondary" title="Descargar como archivo">Descargar</button>
-        <button id="copyBtn" title="Copiar al portapapeles">Copiar resultado</button>
+        <button id="downloadBtn" class="btn-secondary" title="Descargar como archivo (Ctrl+D)">Descargar</button>
+        <button id="copyBtn" title="Copiar al portapapeles (Ctrl+Shift+C)">Copiar resultado</button>
         <button id="clearBtn" class="btn-secondary" title="Limpiar todo">Limpiar</button>
         <button id="themeToggleBtn" type="button" title="Alternar tema">🌙 Oscuro</button>
     </div>
@@ -96,12 +97,27 @@
                 <span>Código formateado</span>
                 <div class="panel-header-actions">
                     <span style="font-size: 0.78rem; opacity: 0.75;">Resaltado con líneas</span>
+                    <button class="panel-icon-btn" id="botonAbrirBusqueda" title="Buscar en código (Ctrl+F)">🔍</button>
                     <button class="panel-icon-btn" id="expandOutputBtn" title="Pantalla completa">⛶</button>
                 </div>
             </div>
-            <div class="panel-body code-viewer-container" id="outputContainer">
-                <div id="outputPlaceholder" class="empty-placeholder">El código formateado aparecerá aquí con números de línea y colores tipo IDE...</div>
-                <pre id="preContainer" class="line-numbers" style="display: none;"><code id="outputCode"></code></pre>
+            <div class="panel-body" style="position: relative;">
+                <!-- Barra Flotante de Búsqueda -->
+                <div id="barraBusqueda" class="search-bar-floating" style="display: none;">
+                    <input type="text" id="campoBusqueda" placeholder="Buscar texto... (Enter = sig, Esc = cerrar)" autocomplete="off" spellcheck="false">
+                    <span id="contadorCoincidencias" class="search-counter">0/0</span>
+                    <button id="botonCoincidenciaAnterior" class="search-nav-btn" title="Coincidencia anterior (Shift+Enter)">▲</button>
+                    <button id="botonCoincidenciaSiguiente" class="search-nav-btn" title="Coincidencia siguiente (Enter)">▼</button>
+                    <button id="botonCerrarBusqueda" class="search-nav-btn" title="Cerrar búsqueda (Esc)">✕</button>
+                </div>
+
+                <div class="code-viewer-container" id="outputContainer">
+                    <div id="outputPlaceholder" class="empty-placeholder">El código formateado aparecerá aquí con números de línea y colores tipo IDE...</div>
+                    <pre id="preContainer" class="line-numbers" style="display: none;"><code id="outputCode"></code></pre>
+                </div>
+
+                <!-- Visor del Modo Diff -->
+                <div id="diffContainer" class="diff-viewer-container" style="display: none;"></div>
             </div>
         </div>
     </div>

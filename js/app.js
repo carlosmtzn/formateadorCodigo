@@ -46,6 +46,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const downloadCancelBtn = document.getElementById('downloadCancelBtn');
     const downloadConfirmBtn = document.getElementById('downloadConfirmBtn');
 
+    // Modo Diff y Búsqueda
+    const botonModoDiff = document.getElementById('botonModoDiff');
+    const diffContainer = document.getElementById('diffContainer');
+    const botonAbrirBusqueda = document.getElementById('botonAbrirBusqueda');
+    const barraBusqueda = document.getElementById('barraBusqueda');
+    const campoBusqueda = document.getElementById('campoBusqueda');
+    const contadorCoincidencias = document.getElementById('contadorCoincidencias');
+    const botonCoincidenciaAnterior = document.getElementById('botonCoincidenciaAnterior');
+    const botonCoincidenciaSiguiente = document.getElementById('botonCoincidenciaSiguiente');
+    const botonCerrarBusqueda = document.getElementById('botonCerrarBusqueda');
+
     let currentOutput = '';
 
     function initPreferences() {
@@ -123,11 +134,46 @@ document.addEventListener('DOMContentLoaded', () => {
         const LIMITE_CARACTERES_RESALTADO = 120000;
         if (code.length > LIMITE_CARACTERES_RESALTADO) {
             preContainer.className = `language-${prismLang}`;
+            envolverLineasEnFilas(outputCode);
             return;
         }
 
         if (window.Prism && !isError) {
             Prism.highlightElement(outputCode);
+        }
+
+        envolverLineasEnFilas(outputCode);
+    }
+
+    // Envuelve cada línea de código en un contenedor individual para permitir resaltado completo y selección
+    function envolverLineasEnFilas(elementoCodigo) {
+        const lineas = elementoCodigo.innerHTML.split('\n');
+        elementoCodigo.innerHTML = lineas.map((lineaHtml, indice) => {
+            const contenido = lineaHtml === '' ? '&nbsp;' : lineaHtml;
+            return `<span class="fila-codigo" data-linea="${indice + 1}">${contenido}</span>`;
+        }).join('\n');
+    }
+
+    // Quita la selección de cualquier fila o número de línea resaltado
+    function deseleccionarFilas() {
+        const filaActiva = outputCode.querySelector('.fila-codigo.fila-seleccionada');
+        if (filaActiva) {
+            filaActiva.classList.remove('fila-seleccionada');
+        }
+        const numeroActivo = preContainer.querySelector('.line-numbers-rows > span.numero-linea-seleccionado');
+        if (numeroActivo) {
+            numeroActivo.classList.remove('numero-linea-seleccionado');
+        }
+    }
+
+    // Resalta el número de línea correspondiente en la barra lateral
+    function resaltarNumeroLinea(numeroLinea) {
+        const contenedorNumeros = preContainer.querySelector('.line-numbers-rows');
+        if (!contenedorNumeros) return;
+        const spansNumeros = contenedorNumeros.children;
+        const indice = Number(numeroLinea) - 1;
+        if (spansNumeros[indice]) {
+            spansNumeros[indice].classList.add('numero-linea-seleccionado');
         }
     }
 
@@ -214,6 +260,8 @@ document.addEventListener('DOMContentLoaded', () => {
     function clearAll() {
         inputArea.value = '';
         updateOutput('');
+        if (modoDiffActivo) alternarModoDiff();
+        cerrarBarraBusqueda();
         setStatus('Listo', '');
     }
 
@@ -557,11 +605,201 @@ document.addEventListener('DOMContentLoaded', () => {
         historyDrawer.classList.remove('open');
     }
 
+    let modoDiffActivo = false;
+
+    // Calcula la subsecuencia común más larga para generar diferencias línea por línea
+    function calcularDiferenciasLineas(lineasAntiguas, lineasNuevas) {
+        const maxLineas = 1000;
+        const a = lineasAntiguas.slice(0, maxLineas);
+        const b = lineasNuevas.slice(0, maxLineas);
+
+        const n = a.length;
+        const m = b.length;
+        const matriz = Array.from({ length: n + 1 }, () => new Int32Array(m + 1));
+
+        for (let i = 0; i < n; i++) {
+            for (let j = 0; j < m; j++) {
+                if (a[i] === b[j]) {
+                    matriz[i + 1][j + 1] = matriz[i][j] + 1;
+                } else {
+                    matriz[i + 1][j + 1] = Math.max(matriz[i + 1][j], matriz[i][j + 1]);
+                }
+            }
+        }
+
+        const resultado = [];
+        let i = n, j = m;
+
+        while (i > 0 || j > 0) {
+            if (i > 0 && j > 0 && a[i - 1] === b[j - 1]) {
+                resultado.unshift({ tipo: 'igual', texto: a[i - 1] });
+                i--;
+                j--;
+            } else if (j > 0 && (i === 0 || matriz[i][j - 1] >= matriz[i - 1][j])) {
+                resultado.unshift({ tipo: 'agregada', texto: b[j - 1] });
+                j--;
+            } else if (i > 0 && (j === 0 || matriz[i][j - 1] < matriz[i - 1][j])) {
+                resultado.unshift({ tipo: 'eliminada', texto: a[i - 1] });
+                i--;
+            }
+        }
+
+        return resultado;
+    }
+
+    // Alterna entre la vista estándar y el visor de diferencias
+    function alternarModoDiff() {
+        modoDiffActivo = !modoDiffActivo;
+
+        if (!modoDiffActivo) {
+            diffContainer.style.display = 'none';
+            outputContainer.style.display = 'block';
+            botonModoDiff.textContent = 'Modo Diff';
+            botonModoDiff.classList.remove('btn-special');
+            botonModoDiff.classList.add('btn-secondary');
+            return;
+        }
+
+        const textoEntrada = inputArea.value;
+        const textoSalida = currentOutput || '';
+
+        if (!textoEntrada.trim() && !textoSalida.trim()) {
+            setStatus('No hay código para comparar', 'error');
+            modoDiffActivo = false;
+            return;
+        }
+
+        const lineasEntrada = textoEntrada.split('\n');
+        const lineasSalida = textoSalida.split('\n');
+        const diferencias = calcularDiferenciasLineas(lineasEntrada, lineasSalida);
+
+        diffContainer.innerHTML = '';
+        diferencias.forEach(linea => {
+            const elementoLinea = document.createElement('div');
+            elementoLinea.className = `linea-diff ${linea.tipo}`;
+
+            const signo = linea.tipo === 'agregada' ? '+' : (linea.tipo === 'eliminada' ? '-' : ' ');
+            elementoLinea.innerHTML = `<span class="signo-diff">${signo}</span><span class="contenido-diff">${escaparCaracteresHtml(linea.texto || ' ')}</span>`;
+            diffContainer.appendChild(elementoLinea);
+        });
+
+        outputContainer.style.display = 'none';
+        diffContainer.style.display = 'block';
+        botonModoDiff.textContent = 'Cerrar Diff';
+        botonModoDiff.classList.remove('btn-secondary');
+        botonModoDiff.classList.add('btn-special');
+        setStatus('✓ Modo Diff activado: comparando entrada vs salida', 'success');
+    }
+
+    let indiceCoincidenciaActual = -1;
+    let elementosCoincidencia = [];
+
+    // Abre la barra de búsqueda y enfoca su campo
+    function abrirBarraBusqueda() {
+        if (modoDiffActivo) alternarModoDiff();
+        barraBusqueda.style.display = 'flex';
+        campoBusqueda.focus();
+        campoBusqueda.select();
+        ejecutarBusqueda();
+    }
+
+    // Cierra la barra de búsqueda y restaura la vista
+    function cerrarBarraBusqueda() {
+        barraBusqueda.style.display = 'none';
+        campoBusqueda.value = '';
+        limpiarResaltadoBusqueda();
+        indiceCoincidenciaActual = -1;
+        elementosCoincidencia = [];
+        contadorCoincidencias.textContent = '0/0';
+    }
+
+    // Restaura el código original en el visor sin marcas de búsqueda
+    function limpiarResaltadoBusqueda() {
+        if (currentOutput) {
+            updateOutput(currentOutput);
+        }
+    }
+
+    // Busca el término dentro del código y resalta las coincidencias
+    function ejecutarBusqueda() {
+        const termino = campoBusqueda.value;
+        if (!termino || !currentOutput) {
+            limpiarResaltadoBusqueda();
+            contadorCoincidencias.textContent = '0/0';
+            elementosCoincidencia = [];
+            indiceCoincidenciaActual = -1;
+            return;
+        }
+
+        const regexBusqueda = new RegExp(`(${termino.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+        const textoEscapado = escaparCaracteresHtml(currentOutput);
+        const htmlResaltado = textoEscapado.replace(regexBusqueda, '<mark class="coincidencia-busqueda">$1</mark>');
+
+        outputCode.innerHTML = htmlResaltado;
+        envolverLineasEnFilas(outputCode);
+        elementosCoincidencia = Array.from(outputCode.querySelectorAll('.coincidencia-busqueda'));
+
+        if (elementosCoincidencia.length > 0) {
+            indiceCoincidenciaActual = 0;
+            actualizarCoincidenciaActiva();
+        } else {
+            indiceCoincidenciaActual = -1;
+            contadorCoincidencias.textContent = '0/0';
+        }
+    }
+
+    // Actualiza la coincidencia activa y la centra en pantalla
+    function actualizarCoincidenciaActiva() {
+        elementosCoincidencia.forEach((el, idx) => {
+            el.classList.toggle('coincidencia-activa', idx === indiceCoincidenciaActual);
+        });
+
+        contadorCoincidencias.textContent = `${indiceCoincidenciaActual + 1}/${elementosCoincidencia.length}`;
+
+        const elementoActivo = elementosCoincidencia[indiceCoincidenciaActual];
+        if (elementoActivo) {
+            elementoActivo.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    }
+
+    function irACoincidenciaSiguiente() {
+        if (elementosCoincidencia.length === 0) return;
+        indiceCoincidenciaActual = (indiceCoincidenciaActual + 1) % elementosCoincidencia.length;
+        actualizarCoincidenciaActiva();
+    }
+
+    function irACoincidenciaAnterior() {
+        if (elementosCoincidencia.length === 0) return;
+        indiceCoincidenciaActual = (indiceCoincidenciaActual - 1 + elementosCoincidencia.length) % elementosCoincidencia.length;
+        actualizarCoincidenciaActiva();
+    }
+
     historyToggleBtn.addEventListener('click', alternarPanelHistorial);
     closeHistoryBtn.addEventListener('click', cerrarPanelHistorial);
     clearHistoryBtn.addEventListener('click', vaciarTodoElHistorial);
 
     window.addEventListener('keydown', (e) => {
+        // Atajo Ctrl+F o Cmd+F para búsqueda en código
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f') {
+            e.preventDefault();
+            abrirBarraBusqueda();
+            return;
+        }
+
+        // Atajo Ctrl+Shift+C para copiar resultado
+        if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'c') {
+            e.preventDefault();
+            copyToClipboard();
+            return;
+        }
+
+        // Atajo Ctrl+D para descargar
+        if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'd') {
+            e.preventDefault();
+            openDownloadModal();
+            return;
+        }
+
         if (e.key === 'Escape') {
             if (inputPanel.classList.contains('fullscreen')) {
                 toggleFullscreen(inputPanel, expandInputBtn);
@@ -572,6 +810,38 @@ document.addEventListener('DOMContentLoaded', () => {
             closeConvertModal();
             closeDownloadModal();
             cerrarPanelHistorial();
+            cerrarBarraBusqueda();
+            deseleccionarFilas();
+            if (modoDiffActivo) alternarModoDiff();
+        }
+    });
+
+    // Maneja la selección o deselección de filas al hacer clic en el código o número de línea
+    outputContainer.addEventListener('click', (evento) => {
+        const filaCodigo = evento.target.closest('.fila-codigo');
+        if (filaCodigo) {
+            const yaEstabaSeleccionada = filaCodigo.classList.contains('fila-seleccionada');
+            deseleccionarFilas();
+            if (!yaEstabaSeleccionada) {
+                filaCodigo.classList.add('fila-seleccionada');
+                resaltarNumeroLinea(filaCodigo.dataset.linea);
+            }
+            return;
+        }
+
+        const spanNumero = evento.target.closest('.line-numbers-rows > span');
+        if (spanNumero) {
+            const contenedorNumeros = spanNumero.parentElement;
+            const indiceFila = Array.from(contenedorNumeros.children).indexOf(spanNumero);
+            const filaDestino = outputCode.querySelector(`.fila-codigo[data-linea="${indiceFila + 1}"]`);
+            if (filaDestino) {
+                const yaEstabaSeleccionada = filaDestino.classList.contains('fila-seleccionada');
+                deseleccionarFilas();
+                if (!yaEstabaSeleccionada) {
+                    filaDestino.classList.add('fila-seleccionada');
+                    spanNumero.classList.add('numero-linea-seleccionado');
+                }
+            }
         }
     });
 
@@ -579,12 +849,30 @@ document.addEventListener('DOMContentLoaded', () => {
     minifyBtn.addEventListener('click', minifyCode);
     validBtn.addEventListener('click', validateCode);
     convertBtn.addEventListener('click', openConvertModal);
+    botonModoDiff.addEventListener('click', alternarModoDiff);
     downloadBtn.addEventListener('click', openDownloadModal);
     downloadConfirmBtn.addEventListener('click', executeDownload);
     downloadCancelBtn.addEventListener('click', closeDownloadModal);
     copyBtn.addEventListener('click', copyToClipboard);
     clearBtn.addEventListener('click', clearAll);
     convertCloseBtn.addEventListener('click', closeConvertModal);
+
+    botonAbrirBusqueda.addEventListener('click', abrirBarraBusqueda);
+    botonCerrarBusqueda.addEventListener('click', cerrarBarraBusqueda);
+    botonCoincidenciaSiguiente.addEventListener('click', irACoincidenciaSiguiente);
+    botonCoincidenciaAnterior.addEventListener('click', irACoincidenciaAnterior);
+    campoBusqueda.addEventListener('input', ejecutarBusqueda);
+
+    campoBusqueda.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            if (e.shiftKey) irACoincidenciaAnterior();
+            else irACoincidenciaSiguiente();
+        }
+        if (e.key === 'Escape') {
+            cerrarBarraBusqueda();
+        }
+    });
 
     downloadFilenameInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
