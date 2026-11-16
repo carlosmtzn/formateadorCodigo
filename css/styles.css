@@ -628,18 +628,6 @@ pre.line-numbers {
     padding-bottom: 0.4rem;
 }
 
-.modal-stats {
-    font-size: 0.92rem;
-    line-height: 1.7;
-}
-
-.modal-stats div {
-    display: flex;
-    justify-content: space-between;
-    padding: 0.35rem 0;
-    border-bottom: 1px solid var(--border-color);
-}
-
 .convert-options-grid {
     display: flex;
     flex-direction: column;

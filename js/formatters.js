@@ -481,25 +481,6 @@ const Formatters = {
         }
 
         return null;
-    },
-
-    getStats(input, output) {
-        const inputLines = input ? input.split('\n').length : 0;
-        const inputChars = input ? input.length : 0;
-        const inputWords = input.trim() ? input.trim().split(/\s+/).filter(w => w.length > 0).length : 0;
-
-        const outputLines = output ? output.split('\n').length : 0;
-        const outputChars = output ? output.length : 0;
-        const reduction = inputChars > 0 ? Math.round((1 - outputChars / inputChars) * 100) : 0;
-
-        return {
-            inputLines,
-            inputChars,
-            inputWords,
-            outputLines,
-            outputChars,
-            reduction
-        };
     }
 };
 

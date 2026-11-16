@@ -25,7 +25,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const minifyBtn = document.getElementById('minifyBtn');
     const validBtn = document.getElementById('validBtn');
     const convertBtn = document.getElementById('convertBtn');
-    const statsBtn = document.getElementById('statsBtn');
     const downloadBtn = document.getElementById('downloadBtn');
     const clearBtn = document.getElementById('clearBtn');
     const copyBtn = document.getElementById('copyBtn');
@@ -37,8 +36,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const expandOutputBtn = document.getElementById('expandOutputBtn');
 
     // Modales
-    const statsModal = document.getElementById('statsModal');
-    const modalCloseBtn = document.getElementById('modalCloseBtn');
     const convertModal = document.getElementById('convertModal');
     const convertCloseBtn = document.getElementById('convertCloseBtn');
     const convertJsonToXmlBtn = document.getElementById('convertJsonToXmlBtn');
@@ -212,30 +209,6 @@ document.addEventListener('DOMContentLoaded', () => {
         inputArea.value = '';
         updateOutput('');
         setStatus('Listo', '');
-    }
-
-    function showStatistics() {
-        const input = inputArea.value;
-        const stats = Formatters.getStats(input, currentOutput);
-
-        const statsContent = document.getElementById('statsContent');
-        statsContent.innerHTML = `
-            <div><strong>Código Original:</strong></div>
-            <div><span>Líneas:</span><span>${stats.inputLines}</span></div>
-            <div><span>Caracteres:</span><span>${stats.inputChars}</span></div>
-            <div><span>Palabras:</span><span>${stats.inputWords}</span></div>
-            <br>
-            <div><strong>Código Procesado:</strong></div>
-            <div><span>Líneas:</span><span>${stats.outputLines}</span></div>
-            <div><span>Caracteres:</span><span>${stats.outputChars}</span></div>
-            <div><span>Reducción / Cambio:</span><span>${stats.reduction}%</span></div>
-        `;
-
-        statsModal.style.display = 'block';
-    }
-
-    function closeStats() {
-        statsModal.style.display = 'none';
     }
 
     function getFileExtension(lang) {
@@ -590,7 +563,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (outputPanel.classList.contains('fullscreen')) {
                 toggleFullscreen(outputPanel, expandOutputBtn);
             }
-            closeStats();
             closeConvertModal();
             closeDownloadModal();
             cerrarPanelHistorial();
@@ -601,13 +573,11 @@ document.addEventListener('DOMContentLoaded', () => {
     minifyBtn.addEventListener('click', minifyCode);
     validBtn.addEventListener('click', validateCode);
     convertBtn.addEventListener('click', openConvertModal);
-    statsBtn.addEventListener('click', showStatistics);
     downloadBtn.addEventListener('click', openDownloadModal);
     downloadConfirmBtn.addEventListener('click', executeDownload);
     downloadCancelBtn.addEventListener('click', closeDownloadModal);
     copyBtn.addEventListener('click', copyToClipboard);
     clearBtn.addEventListener('click', clearAll);
-    modalCloseBtn.addEventListener('click', closeStats);
     convertCloseBtn.addEventListener('click', closeConvertModal);
 
     downloadFilenameInput.addEventListener('keydown', (e) => {
@@ -624,7 +594,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     window.addEventListener('click', (event) => {
-        if (event.target === statsModal) closeStats();
         if (event.target === convertModal) closeConvertModal();
         if (event.target === downloadModal) closeDownloadModal();
     });
