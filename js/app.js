@@ -120,6 +120,12 @@ document.addEventListener('DOMContentLoaded', () => {
         outputCode.className = `language-${prismLang}`;
         preContainer.className = `language-${prismLang} line-numbers`;
 
+        const LIMITE_CARACTERES_RESALTADO = 120000;
+        if (code.length > LIMITE_CARACTERES_RESALTADO) {
+            preContainer.className = `language-${prismLang}`;
+            return;
+        }
+
         if (window.Prism && !isError) {
             Prism.highlightElement(outputCode);
         }

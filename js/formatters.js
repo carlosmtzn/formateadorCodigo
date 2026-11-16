@@ -32,29 +32,52 @@ const Formatters = {
     },
 
     formatXML(xml, indentStr = '  ') {
-        const reg = /(>)(<)(\/*)/g;
-        let formatted = '';
-        let pad = 0;
+        if (!xml || !xml.trim()) return '';
 
-        xml = xml.replace(reg, '$1\n$2$3');
-        
-        xml.split('\n').forEach(node => {
-            let indent = 0;
-            if (node.match(/.+<\/\w[^>]*>$/)) {
-                indent = 0;
-            } else if (node.match(/^<\/\w/) && pad > 0) {
-                pad -= 1;
-            } else if (node.match(/^<\w[^>]*[^\/]>.*$/)) {
-                indent = 1;
-            } else {
-                indent = 0;
+        const tokens = xml.replace(/>\s*</g, '><').match(/<[^>]+>|[^<]+/g) || [];
+        const lineasResultado = [];
+        let nivelIndentacion = 0;
+
+        for (let i = 0; i < tokens.length; i++) {
+            const nodo = tokens[i].trim();
+            if (!nodo) continue;
+
+            if (nodo.startsWith('<!--') || nodo.startsWith('<?') || nodo.startsWith('<!')) {
+                lineasResultado.push(indentStr.repeat(nivelIndentacion) + nodo);
+                continue;
             }
 
-            formatted += indentStr.repeat(pad) + node.trim() + '\n';
-            pad += indent;
-        });
+            if (nodo.startsWith('</')) {
+                nivelIndentacion = Math.max(0, nivelIndentacion - 1);
+                lineasResultado.push(indentStr.repeat(nivelIndentacion) + nodo);
+                continue;
+            }
 
-        return formatted.trim();
+            if (nodo.endsWith('/>')) {
+                lineasResultado.push(indentStr.repeat(nivelIndentacion) + nodo);
+                continue;
+            }
+
+            if (nodo.startsWith('<')) {
+                const siguienteToken = tokens[i + 1] ? tokens[i + 1].trim() : '';
+                const segundoSiguienteToken = tokens[i + 2] ? tokens[i + 2].trim() : '';
+                const nombreEtiqueta = (nodo.match(/^<([a-zA-Z0-9_\-:]+)/) || [])[1];
+
+                if (nombreEtiqueta && !siguienteToken.startsWith('<') && segundoSiguienteToken === `</${nombreEtiqueta}>`) {
+                    lineasResultado.push(indentStr.repeat(nivelIndentacion) + nodo + siguienteToken + segundoSiguienteToken);
+                    i += 2;
+                    continue;
+                }
+
+                lineasResultado.push(indentStr.repeat(nivelIndentacion) + nodo);
+                nivelIndentacion++;
+                continue;
+            }
+
+            lineasResultado.push(indentStr.repeat(nivelIndentacion) + nodo);
+        }
+
+        return lineasResultado.join('\n');
     },
 
     formatJSON(json, indentStr = '  ') {
@@ -64,29 +87,53 @@ const Formatters = {
     },
 
     formatHTML(html, indentStr = '  ') {
-        const reg = /(>)(<)(\/*)/g;
-        let formatted = '';
-        let pad = 0;
+        if (!html || !html.trim()) return '';
+        const tokens = html.replace(/>\s*</g, '><').match(/<[^>]+>|[^<]+/g) || [];
+        const lineasResultado = [];
+        let nivelIndentacion = 0;
+        const etiquetasVacias = /^(area|base|br|col|embed|hr|img|input|link|meta|param|source|track|wbr)$/i;
 
-        html = html.replace(reg, '$1\n$2$3');
-        
-        html.split('\n').forEach(node => {
-            let indent = 0;
-            if (node.match(/.+<\/\w[^>]*>$/)) {
-                indent = 0;
-            } else if (node.match(/^<\/\w/) && pad > 0) {
-                pad -= 1;
-            } else if (node.match(/^<\w[^>]*[^\/]>.*$/)) {
-                indent = 1;
-            } else {
-                indent = 0;
+        for (let i = 0; i < tokens.length; i++) {
+            const nodo = tokens[i].trim();
+            if (!nodo) continue;
+
+            if (nodo.startsWith('<!--') || nodo.startsWith('<?') || nodo.startsWith('<!')) {
+                lineasResultado.push(indentStr.repeat(nivelIndentacion) + nodo);
+                continue;
             }
 
-            formatted += indentStr.repeat(pad) + node.trim() + '\n';
-            pad += indent;
-        });
+            if (nodo.startsWith('</')) {
+                nivelIndentacion = Math.max(0, nivelIndentacion - 1);
+                lineasResultado.push(indentStr.repeat(nivelIndentacion) + nodo);
+                continue;
+            }
 
-        return formatted.trim();
+            const nombreEtiqueta = (nodo.match(/^<([a-zA-Z0-9_\-:]+)/) || [])[1];
+
+            if (nodo.endsWith('/>') || (nombreEtiqueta && etiquetasVacias.test(nombreEtiqueta))) {
+                lineasResultado.push(indentStr.repeat(nivelIndentacion) + nodo);
+                continue;
+            }
+
+            if (nodo.startsWith('<')) {
+                const siguienteToken = tokens[i + 1] ? tokens[i + 1].trim() : '';
+                const segundoSiguienteToken = tokens[i + 2] ? tokens[i + 2].trim() : '';
+
+                if (nombreEtiqueta && !siguienteToken.startsWith('<') && segundoSiguienteToken.toLowerCase() === `</${nombreEtiqueta.toLowerCase()}>`) {
+                    lineasResultado.push(indentStr.repeat(nivelIndentacion) + nodo + siguienteToken + segundoSiguienteToken);
+                    i += 2;
+                    continue;
+                }
+
+                lineasResultado.push(indentStr.repeat(nivelIndentacion) + nodo);
+                nivelIndentacion++;
+                continue;
+            }
+
+            lineasResultado.push(indentStr.repeat(nivelIndentacion) + nodo);
+        }
+
+        return lineasResultado.join('\n');
     },
 
     // Tokenizador y formateador robusto para Java/JavaScript (incluso con código minificado de 1 sola línea)
@@ -223,50 +270,69 @@ const Formatters = {
     },
 
     formatSQL(sql, indentStr = '  ') {
-        const keywords = [
-            'SELECT', 'FROM', 'WHERE', 'AND', 'OR', 'ORDER BY', 'GROUP BY', 
-            'HAVING', 'LIMIT', 'OFFSET', 'JOIN', 'LEFT JOIN', 'RIGHT JOIN', 
-            'INNER JOIN', 'OUTER JOIN', 'CROSS JOIN', 'ON', 'INSERT INTO', 
-            'VALUES', 'UPDATE', 'SET', 'DELETE FROM', 'UNION ALL', 'UNION', 
-            'CREATE TABLE', 'DROP TABLE', 'ALTER TABLE', 'AS', 'IN', 'NOT IN', 
-            'BETWEEN', 'LIKE', 'IS NULL', 'IS NOT NULL', 'DISTINCT', 'CASE', 
-            'WHEN', 'THEN', 'ELSE', 'END'
-        ];
+        if (!sql || !sql.trim()) return '';
 
-        let formatted = sql.trim().replace(/\s+/g, ' ');
+        const literalesYComentarios = [];
+        // Protege cadenas ('...'), comentarios de bloque (/* ... */) y comentarios de línea (-- ...)
+        const patronProteccion = /('(?:''|[^'])*'|\/\*[\s\S]*?\*\/|--[^\r\n]*)/g;
 
-        keywords.forEach(kw => {
-            const regex = new RegExp(`\\b${kw}\\b`, 'gi');
-            formatted = formatted.replace(regex, kw);
+        let textoProtegido = sql.replace(patronProteccion, (coincidencia) => {
+            const indice = literalesYComentarios.length;
+            literalesYComentarios.push(coincidencia);
+            return `___TOKEN_SQL_${indice}___`;
         });
 
-        const lineBreakClauses = [
+        textoProtegido = textoProtegido.replace(/[ \t]+/g, ' ').trim();
+
+        const palabrasClave = [
+            'SELECT', 'DISTINCT', 'FROM', 'WHERE', 'AND', 'OR', 'ORDER BY', 'GROUP BY', 
+            'HAVING', 'LIMIT', 'OFFSET', 'JOIN', 'LEFT JOIN', 'RIGHT JOIN', 
+            'INNER JOIN', 'OUTER JOIN', 'CROSS JOIN', 'ON', 'INSERT INTO', 
+            'VALUES', 'UPDATE', 'SET', 'DELETE FROM', 'DELETE', 'UNION ALL', 'UNION', 
+            'CREATE TABLE', 'DROP TABLE', 'ALTER TABLE', 'PRIMARY KEY', 'FOREIGN KEY',
+            'REFERENCES', 'AS', 'IN', 'NOT IN', 'BETWEEN', 'LIKE', 'IS NULL', 'IS NOT NULL',
+            'CASE', 'WHEN', 'THEN', 'ELSE', 'END', 'EXISTS', 'NOT EXISTS'
+        ];
+
+        palabrasClave.forEach(palabra => {
+            const regex = new RegExp(`\\b${palabra}\\b`, 'gi');
+            textoProtegido = textoProtegido.replace(regex, palabra);
+        });
+
+        const clausulasSalto = [
             'SELECT', 'FROM', 'WHERE', 'AND', 'OR', 'ORDER BY', 'GROUP BY', 
             'HAVING', 'LIMIT', 'OFFSET', 'JOIN', 'LEFT JOIN', 'RIGHT JOIN', 
             'INNER JOIN', 'OUTER JOIN', 'CROSS JOIN', 'INSERT INTO', 'VALUES', 
             'UPDATE', 'SET', 'DELETE FROM', 'UNION ALL', 'UNION'
         ];
 
-        lineBreakClauses.forEach(clause => {
-            const regex = new RegExp(`(\\s*)\\b(${clause})\\b`, 'g');
-            formatted = formatted.replace(regex, '\n$2');
+        clausulasSalto.forEach(clausula => {
+            const regex = new RegExp(`(\\s*)\\b(${clausula})\\b`, 'g');
+            textoProtegido = textoProtegido.replace(regex, '\n$2');
         });
 
-        const lines = formatted.split('\n');
-        let result = '';
+        const lineas = textoProtegido.split('\n');
+        const lineasFormateadas = [];
 
-        lines.forEach(line => {
-            line = line.trim();
-            if (!line) return;
+        lineas.forEach(linea => {
+            const lineaLimpia = linea.trim();
+            if (!lineaLimpia) return;
 
-            if (/^(AND|OR|ON|SET|VALUES)\b/.test(line)) {
-                result += indentStr + line + '\n';
+            if (/^(AND|OR|ON|SET|VALUES)\b/.test(lineaLimpia)) {
+                lineasFormateadas.push(indentStr + lineaLimpia);
             } else {
-                result += line + '\n';
+                lineasFormateadas.push(lineaLimpia);
             }
         });
 
-        return result.trim();
+        let resultado = lineasFormateadas.join('\n');
+
+        // Restaurar comentarios y cadenas originales
+        resultado = resultado.replace(/___TOKEN_SQL_(\d+)___/g, (_, indice) => {
+            return literalesYComentarios[Number(indice)];
+        });
+
+        return resultado.trim();
     },
 
     format(code, language, indentType = '4') {
@@ -444,39 +510,38 @@ const Formatters = {
     },
 
     detectLanguage(code) {
-        const trimmed = code.trim();
-        if (!trimmed) return null;
+        if (!code) return null;
+        const fragmentoInicial = code.slice(0, 3000).trim();
+        if (!fragmentoInicial) return null;
 
         // 1. JSON
-        if ((trimmed.startsWith('{') && trimmed.endsWith('}')) || (trimmed.startsWith('[') && trimmed.endsWith(']'))) {
+        if (fragmentoInicial.startsWith('{') || fragmentoInicial.startsWith('[')) {
             try {
-                JSON.parse(trimmed);
+                JSON.parse(code);
                 return 'json';
-            } catch (e) {
-                // Posible JSON o código
-            }
+            } catch (e) {}
         }
 
         // 2. HTML / XML
-        if (trimmed.startsWith('<')) {
-            if (/<!DOCTYPE\s+html/i.test(trimmed) || /<html[\s>]/i.test(trimmed) || /<body[\s>]/i.test(trimmed) || /<div[\s>]/i.test(trimmed)) {
+        if (fragmentoInicial.startsWith('<')) {
+            if (/<!DOCTYPE\s+html/i.test(fragmentoInicial) || /<html[\s>]/i.test(fragmentoInicial) || /<body[\s>]/i.test(fragmentoInicial) || /<div[\s>]/i.test(fragmentoInicial)) {
                 return 'html';
             }
             return 'xml';
         }
 
-        // 3. SQL
-        if (/^\s*(SELECT|INSERT\s+INTO|UPDATE|DELETE\s+FROM|CREATE\s+TABLE|ALTER\s+TABLE|DROP\s+TABLE|WITH)\b/i.test(trimmed)) {
+        // 3. SQL (incluso si comienza con comentarios)
+        if (/^\s*(?:--[^\n]*\n|\/\*[\s\S]*?\*\/\s*)*(SELECT|INSERT\s+INTO|UPDATE|DELETE\s+FROM|CREATE\s+TABLE|ALTER\s+TABLE|DROP\s+TABLE|WITH)\b/i.test(fragmentoInicial)) {
             return 'sql';
         }
 
         // 4. Java
-        if (/\b(public\s+class|System\.out\.println|package\s+[a-z0-9_.]+|import\s+java\.)\b/.test(trimmed)) {
+        if (/\b(public\s+class|System\.out\.println|package\s+[a-z0-9_.]+|import\s+java\.)\b/.test(fragmentoInicial)) {
             return 'java';
         }
 
         // 5. JavaScript
-        if (/\b(const\s+\w+|let\s+\w+|var\s+\w+|function\s*\(|function\s+\w+|console\.log|=>)\b/.test(trimmed)) {
+        if (/\b(const\s+\w+|let\s+\w+|var\s+\w+|function\s*\(|function\s+\w+|console\.log|=>)\b/.test(fragmentoInicial)) {
             return 'javascript';
         }
 
