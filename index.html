@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Formateador de Código Pro</title>
+    <title>Formateador de Código</title>
     
     <!-- PWA Meta Tags -->
     <link rel="manifest" href="manifest.json">
@@ -23,10 +23,39 @@
             <img src="icons/icon.svg" alt="Logo" class="header-logo">
             <h1>Formateador de Código</h1>
         </div>
-        <div class="header-badges">
-            <span>Offline Ready (PWA) • IDE Syntax</span>
+        <div class="interruptor-tema-contenedor" title="Alternar modo claro / oscuro">
+            <svg class="icono-svg icono-sol" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="5"></circle>
+                <line x1="12" y1="1" x2="12" y2="3"></line>
+                <line x1="12" y1="21" x2="12" y2="23"></line>
+                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                <line x1="1" y1="12" x2="3" y2="12"></line>
+                <line x1="21" y1="12" x2="23" y2="12"></line>
+                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+            </svg>
+            <label class="switch-interruptor">
+                <input type="checkbox" id="interruptorModoOscuro" aria-label="Alternar modo claro u oscuro">
+                <span class="slider-interruptor"></span>
+            </label>
+            <svg class="icono-svg icono-luna" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+            </svg>
         </div>
     </header>
+
+    <!-- Barra de Pestañas de Trabajo Múltiple -->
+    <div class="tabs-bar" id="barraPestanas">
+        <div class="tabs-list" id="contenedorPestanas"></div>
+        <button class="tab-add-btn" id="botonNuevaPestana" title="Abrir nueva pestaña de trabajo (Alt+T)">
+            <svg class="icono-svg" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            Nueva pestaña
+        </button>
+    </div>
 
     <div class="controls">
         <div class="control-group">
@@ -53,35 +82,77 @@
         <button id="formatBtn" title="Formatear código">Formatear</button>
         <button id="minifyBtn" class="btn-secondary" title="Minificar código en una línea">Minificar</button>
         <button id="validBtn" class="btn-secondary" title="Validar sintaxis básica">Validar</button>
-        <button id="botonModoDiff" class="btn-secondary" title="Comparar diferencias entre entrada y salida">Modo Diff</button>
-        <button id="convertBtn" class="btn-special" title="Convertir formato (JSON / XML)">Convertir ⇄</button>
+        <button id="botonModoDiff" class="btn-secondary" title="Comparar diferencias estilo Beyond Compare">
+            <svg class="icono-svg" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+                <line x1="12" y1="3" x2="12" y2="21"></line>
+            </svg>
+            Comparar (Beyond)
+        </button>
+        <button id="convertBtn" class="btn-special" title="Convertir formato (JSON / XML)">
+            <svg class="icono-svg" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="17 1 21 5 17 9"></polyline>
+                <path d="M3 11V9a4 4 0 0 1 4-4h14"></path>
+                <polyline points="7 23 3 19 7 15"></polyline>
+                <path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
+            </svg>
+            Convertir
+        </button>
         <button id="downloadBtn" class="btn-secondary" title="Descargar como archivo (Ctrl+D)">Descargar</button>
         <button id="copyBtn" title="Copiar al portapapeles (Ctrl+Shift+C)">Copiar resultado</button>
         <button id="clearBtn" class="btn-secondary" title="Limpiar todo">Limpiar</button>
-        <button id="themeToggleBtn" type="button" title="Alternar tema">🌙 Oscuro</button>
     </div>
 
-    <div class="container">
+    <div class="container" id="contenedorPrincipal">
         <!-- Panel Izquierdo: Entrada con Drag & Drop -->
         <div class="panel" id="inputPanel">
             <div class="panel-header">
                 <div style="display: flex; align-items: center; gap: 0.5rem;">
                     <span>Código sin formato</span>
-                    <button class="panel-icon-btn history-pill-btn" id="historyToggleBtn" title="Ver historial de textos">🕒 Historial (<span id="historyCount">0</span>)</button>
+                    <button class="panel-icon-btn history-pill-btn" id="historyToggleBtn" title="Ver historial de textos">
+                        <svg class="icono-svg" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polyline points="12 6 12 12 16 14"></polyline>
+                        </svg>
+                        Historial (<span id="historyCount">0</span>)
+                    </button>
                 </div>
                 <div class="panel-header-actions">
                     <span style="font-size: 0.78rem; opacity: 0.75;">(Arrastra un archivo o Ctrl+Enter)</span>
-                    <button class="panel-icon-btn" id="expandInputBtn" title="Pantalla completa">⛶</button>
+                    <button class="panel-icon-btn" id="expandInputBtn" title="Pantalla completa">
+                        <svg class="icono-svg icono-pantalla-completa" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
+                        </svg>
+                    </button>
                 </div>
             </div>
             <div class="panel-body">
                 <!-- Drawer / Desplegable de Historial tipo Chat -->
                 <div id="historyDrawer" class="history-drawer">
                     <div class="history-drawer-header">
-                        <span class="history-drawer-title">📜 Historial de Código</span>
+                        <span class="history-drawer-title">
+                            <svg class="icono-svg" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                <polyline points="14 2 14 8 20 8"></polyline>
+                                <line x1="16" y1="13" x2="8" y2="13"></line>
+                                <line x1="16" y1="17" x2="8" y2="17"></line>
+                            </svg>
+                            Historial de Código
+                        </span>
                         <div class="history-drawer-actions">
-                            <button id="clearHistoryBtn" class="history-action-btn" title="Vaciar todo el historial">🗑️ Vaciar</button>
-                            <button id="closeHistoryBtn" class="history-action-btn" title="Cerrar historial">✕</button>
+                            <button id="clearHistoryBtn" class="history-action-btn" title="Vaciar todo el historial">
+                                <svg class="icono-svg" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="3 6 5 6 21 6"></polyline>
+                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                </svg>
+                                Vaciar
+                            </button>
+                            <button id="closeHistoryBtn" class="history-action-btn" title="Cerrar historial">
+                                <svg class="icono-svg" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                </svg>
+                            </button>
                         </div>
                     </div>
                     <div id="historyList" class="history-list"></div>
@@ -97,8 +168,17 @@
                 <span>Código formateado</span>
                 <div class="panel-header-actions">
                     <span style="font-size: 0.78rem; opacity: 0.75;">Resaltado con líneas</span>
-                    <button class="panel-icon-btn" id="botonAbrirBusqueda" title="Buscar en código (Ctrl+F)">🔍</button>
-                    <button class="panel-icon-btn" id="expandOutputBtn" title="Pantalla completa">⛶</button>
+                    <button class="panel-icon-btn" id="botonAbrirBusqueda" title="Buscar en código (Ctrl+F)">
+                        <svg class="icono-svg" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                    </button>
+                    <button class="panel-icon-btn" id="expandOutputBtn" title="Pantalla completa">
+                        <svg class="icono-svg icono-pantalla-completa" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
+                        </svg>
+                    </button>
                 </div>
             </div>
             <div class="panel-body" style="position: relative;">
@@ -106,18 +186,260 @@
                 <div id="barraBusqueda" class="search-bar-floating" style="display: none;">
                     <input type="text" id="campoBusqueda" placeholder="Buscar texto... (Enter = sig, Esc = cerrar)" autocomplete="off" spellcheck="false">
                     <span id="contadorCoincidencias" class="search-counter">0/0</span>
-                    <button id="botonCoincidenciaAnterior" class="search-nav-btn" title="Coincidencia anterior (Shift+Enter)">▲</button>
-                    <button id="botonCoincidenciaSiguiente" class="search-nav-btn" title="Coincidencia siguiente (Enter)">▼</button>
-                    <button id="botonCerrarBusqueda" class="search-nav-btn" title="Cerrar búsqueda (Esc)">✕</button>
+                    <button id="botonCoincidenciaAnterior" class="search-nav-btn" title="Coincidencia anterior (Shift+Enter)">
+                        <svg class="icono-svg" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="18 15 12 9 6 15"></polyline>
+                        </svg>
+                    </button>
+                    <button id="botonCoincidenciaSiguiente" class="search-nav-btn" title="Coincidencia siguiente (Enter)">
+                        <svg class="icono-svg" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </button>
+                    <button id="botonCerrarBusqueda" class="search-nav-btn" title="Cerrar búsqueda (Esc)">
+                        <svg class="icono-svg" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
                 </div>
 
                 <div class="code-viewer-container" id="outputContainer">
                     <div id="outputPlaceholder" class="empty-placeholder">El código formateado aparecerá aquí con números de línea y colores tipo IDE...</div>
                     <pre id="preContainer" class="line-numbers" style="display: none;"><code id="outputCode"></code></pre>
                 </div>
+            </div>
+        </div>
+    </div>
 
-                <!-- Visor del Modo Diff -->
-                <div id="diffContainer" class="diff-viewer-container" style="display: none;"></div>
+    <!-- Módulo de Comparación Avanzada (Beyond Compare) -->
+    <div id="seccionComparador" class="beyond-compare-wrapper" style="display: none;">
+        <!-- Barra de Herramientas Beyond Compare -->
+        <div class="beyond-toolbar">
+            <div class="beyond-toolbar-group">
+                <span class="beyond-brand-pill">
+                    <svg class="icono-svg" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+                        <line x1="12" y1="3" x2="12" y2="21"></line>
+                    </svg>
+                    Beyond Compare
+                </span>
+
+                <!-- Conmutador Principal: Editor vs Visualizador de Diferencias -->
+                <div class="beyond-btn-group">
+                    <button type="button" id="btnModoEdicion" class="beyond-tool-btn activa" title="Modo editor: escribir o pegar textos directamente">
+                        <svg class="icono-svg" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                        Escribir / Pegar
+                    </button>
+                    <button type="button" id="btnModoVisual" class="beyond-tool-btn" title="Ver diferencias visuales con resaltado">
+                        <svg class="icono-svg" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                        Ver Diferencias
+                    </button>
+                </div>
+
+                <!-- Sub-conmutador de vista visual -->
+                <div class="beyond-btn-group" id="grupoVistasVisuales" style="display: none;">
+                    <button type="button" id="btnVistaParalela" class="beyond-tool-btn activa" title="Vista dividida lado a lado (Side-by-side)">
+                        <svg class="icono-svg" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+                            <line x1="12" y1="3" x2="12" y2="21"></line>
+                        </svg>
+                        Dividida
+                    </button>
+                    <button type="button" id="btnVistaUnificada" class="beyond-tool-btn" title="Vista unificada en una sola columna (Inline)">
+                        <svg class="icono-svg" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="4" y1="6" x2="20" y2="6"></line>
+                            <line x1="4" y1="12" x2="20" y2="12"></line>
+                            <line x1="4" y1="18" x2="20" y2="18"></line>
+                        </svg>
+                        Unificada
+                    </button>
+                </div>
+            </div>
+
+            <div class="beyond-toolbar-group">
+                <button type="button" id="btnDistinguirMayusculas" class="beyond-tool-btn activa" title="Distinguir mayúsculas y minúsculas (Sensible a mayúsculas)">
+                    <span class="beyond-toggle-tag">Aa</span> Mayús/Minús
+                </button>
+
+                <div class="beyond-select-wrap" title="Modo de comparación de indentación y espacios en blanco">
+                    <label for="selectModoEspacios">Espacios:</label>
+                    <select id="selectModoEspacios">
+                        <option value="estricto" selected>Detectar indentación exacta</option>
+                        <option value="ignorar_indentacion">Ignorar indentación (espacios iniciales)</option>
+                        <option value="ignorar_todos">Ignorar todos los espacios</option>
+                    </select>
+                </div>
+
+                <button type="button" id="btnIgnorarLineasVacias" class="beyond-tool-btn" title="Ignorar saltos de línea y líneas vacías">
+                    Ignorar vacías
+                </button>
+
+                <div class="beyond-select-wrap" id="wrapFiltroLineas" style="display: none;" title="Filtrar qué líneas mostrar">
+                    <label for="selectFiltroLineas">Ver:</label>
+                    <select id="selectFiltroLineas">
+                        <option value="todas" selected>Todas las líneas</option>
+                        <option value="solo_diferencias">Solo diferencias</option>
+                        <option value="solo_iguales">Solo idénticas</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="beyond-toolbar-group">
+                <div id="grupoNavegacionDiferencias" style="display: none; align-items: center; gap: 0.35rem;">
+                    <button type="button" id="btnDiferenciaAnterior" class="beyond-tool-btn" title="Ir a la diferencia anterior (Shift+F7)">
+                        <svg class="icono-svg" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="18 15 12 9 6 15"></polyline>
+                        </svg>
+                        Anterior
+                    </button>
+                    <span id="contadorDiferencias" class="beyond-counter-pill">0 diferencias</span>
+                    <button type="button" id="btnDiferenciaSiguiente" class="beyond-tool-btn" title="Ir a la siguiente diferencia (F7)">
+                        Siguiente
+                        <svg class="icono-svg" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="beyond-stats" id="grupoStatsDiferencias" style="display: none;">
+                    <span class="beyond-stat-badge stat-agregada" id="statAgregadas" title="Líneas agregadas">+0</span>
+                    <span class="beyond-stat-badge stat-eliminada" id="statEliminadas" title="Líneas eliminadas">-0</span>
+                    <span class="beyond-stat-badge stat-modificada" id="statModificadas" title="Líneas modificadas">~0</span>
+                </div>
+
+                <button type="button" id="btnIntercambiarLados" class="beyond-tool-btn" title="Intercambiar lados izquierdo y derecho">
+                    <svg class="icono-svg" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="17 1 21 5 17 9"></polyline>
+                        <path d="M3 11V9a4 4 0 0 1 4-4h14"></path>
+                        <polyline points="7 23 3 19 7 15"></polyline>
+                        <path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
+                    </svg>
+                    Intercambiar
+                </button>
+
+                <button type="button" id="btnImportarFormateador" class="beyond-tool-btn" title="Cargar los textos del formateador a los paneles de comparación">
+                    <svg class="icono-svg" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                    Traer del Formateador
+                </button>
+
+                <button type="button" id="btnCerrarComparador" class="beyond-close-btn" title="Cerrar comparador y volver al formateador (Esc)">
+                    <svg class="icono-svg" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Área de Contenido de Comparación -->
+        <div class="beyond-viewport">
+            <!-- VISTA 1: MODO EDITOR (ESCRIBIR / PEGAR LIBREMENTE EN AMBOS LADOS) -->
+            <div id="vistaEdicionComparacion" class="beyond-editor-view">
+                <!-- Panel Editor Izquierdo -->
+                <div class="beyond-panel">
+                    <div class="beyond-panel-header">
+                        <span class="beyond-panel-title">
+                            <span class="beyond-side-pill">LADO A</span>
+                            Texto Izquierdo (Original / Base)
+                        </span>
+                        <div class="beyond-panel-actions">
+                            <span class="beyond-panel-info" id="contadorIzquierdo">0 líneas</span>
+                            <button type="button" class="beyond-pane-btn" id="btnPegarIzquierdo" title="Pegar texto del portapapeles">Pegar</button>
+                            <button type="button" class="beyond-pane-btn" id="btnCopiarEdicionIzquierdo" title="Copiar texto">Copiar</button>
+                            <button type="button" class="beyond-pane-btn" id="btnLimpiarIzquierdo" title="Limpiar este panel">Limpiar</button>
+                            <label class="beyond-pane-btn beyond-file-btn" title="Cargar archivo de texto">
+                                Cargar
+                                <input type="file" id="inputArchivoIzquierdo" style="display: none;">
+                            </label>
+                            <button type="button" class="beyond-pane-btn" id="btnVerDiffDesdeEditorIzquierdo" title="Ver diferencias visuales">Ver Diferencias</button>
+                        </div>
+                    </div>
+                    <div class="beyond-textarea-wrap">
+                        <textarea id="textareaComparadorIzquierdo" class="beyond-textarea" placeholder="Pega o escribe aquí el texto del lado izquierdo que deseas comparar (o arrastra un archivo)..." spellcheck="false"></textarea>
+                    </div>
+                </div>
+
+                <!-- Panel Editor Derecho -->
+                <div class="beyond-panel">
+                    <div class="beyond-panel-header">
+                        <span class="beyond-panel-title">
+                            <span class="beyond-side-pill">LADO B</span>
+                            Texto Derecho (Modificado / Comparado)
+                        </span>
+                        <div class="beyond-panel-actions">
+                            <span class="beyond-panel-info" id="contadorDerecho">0 líneas</span>
+                            <button type="button" class="beyond-pane-btn" id="btnPegarDerecho" title="Pegar texto del portapapeles y comparar de inmediato">Pegar</button>
+                            <button type="button" class="beyond-pane-btn" id="btnCopiarEdicionDerecho" title="Copiar texto">Copiar</button>
+                            <button type="button" class="beyond-pane-btn" id="btnLimpiarDerecho" title="Limpiar este panel">Limpiar</button>
+                            <label class="beyond-pane-btn beyond-file-btn" title="Cargar archivo de texto">
+                                Cargar
+                                <input type="file" id="inputArchivoDerecho" style="display: none;">
+                            </label>
+                            <button type="button" class="beyond-pane-btn" id="btnVerDiffDesdeEditorDerecho" title="Ver diferencias visuales">Ver Diferencias</button>
+                        </div>
+                    </div>
+                    <div class="beyond-textarea-wrap">
+                        <textarea id="textareaComparadorDerecho" class="beyond-textarea" placeholder="Pega o escribe aquí el texto del lado derecho que deseas comparar (o arrastra un archivo)..." spellcheck="false"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VISTA 2: MODO VISUALIZADOR DE DIFERENCIAS -->
+            <div id="vistaVisualComparacion" class="beyond-visual-view" style="display: none;">
+                <!-- VISTA PARALELA (LADO A LADO) -->
+                <div id="vistaComparacionParalela" class="beyond-split-view">
+                    <!-- Panel Izquierdo Visual -->
+                    <div class="beyond-panel" id="panelComparacionIzquierdo">
+                        <div class="beyond-panel-header">
+                            <span class="beyond-panel-title">
+                                <span class="beyond-side-pill">LADO A</span>
+                                Texto Izquierdo (Base)
+                            </span>
+                            <div class="beyond-panel-actions">
+                                <button type="button" class="beyond-pane-btn" id="btnPegarVisualIzquierdo" title="Pegar texto en Lado Izquierdo y comparar de inmediato">Pegar</button>
+                                <button type="button" class="beyond-pane-btn" id="btnCopiarTextoIzquierdo" title="Copiar texto de este panel">Copiar</button>
+                                <button type="button" class="beyond-pane-btn" id="btnLimpiarVisualIzquierdo" title="Limpiar Lado Izquierdo">Limpiar</button>
+                                <button type="button" class="beyond-pane-btn" id="btnEditarIzquierdoDesdeVisual" title="Volver al editor de texto completo">Editor</button>
+                            </div>
+                        </div>
+                        <div class="beyond-scroll-container" id="scrollComparacionIzquierdo">
+                            <div class="beyond-code-grid" id="gridComparacionIzquierdo"></div>
+                        </div>
+                    </div>
+
+                    <!-- Panel Derecho Visual -->
+                    <div class="beyond-panel" id="panelComparacionDerecho">
+                        <div class="beyond-panel-header">
+                            <span class="beyond-panel-title">
+                                <span class="beyond-side-pill">LADO B</span>
+                                Texto Derecho (Comparado)
+                            </span>
+                            <div class="beyond-panel-actions">
+                                <button type="button" class="beyond-pane-btn" id="btnPegarVisualDerecho" title="Pegar texto en Lado Derecho y comparar de inmediato">Pegar</button>
+                                <button type="button" class="beyond-pane-btn" id="btnCopiarTextoDerecho" title="Copiar texto de este panel">Copiar</button>
+                                <button type="button" class="beyond-pane-btn" id="btnLimpiarVisualDerecho" title="Limpiar Lado Derecho">Limpiar</button>
+                                <button type="button" class="beyond-pane-btn" id="btnEditarDerechoDesdeVisual" title="Volver al editor de texto completo">Editor</button>
+                            </div>
+                        </div>
+                        <div class="beyond-scroll-container" id="scrollComparacionDerecho">
+                            <div class="beyond-code-grid" id="gridComparacionDerecho"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VISTA UNIFICADA (INLINE) -->
+                <div id="vistaComparacionUnificada" class="beyond-unified-view" style="display: none;">
+                    <div class="beyond-panel-header">
+                        <span class="beyond-panel-title">Diferencias Unificadas</span>
+                        <div class="beyond-panel-actions">
+                            <button type="button" class="beyond-pane-btn" id="btnEditarDesdeUnificada" title="Volver al editor de textos">Editor de Textos</button>
+                        </div>
+                    </div>
+                    <div class="beyond-scroll-container" id="scrollComparacionUnificado">
+                        <div class="beyond-code-grid" id="gridComparacionUnificado"></div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -130,8 +452,22 @@
             <div class="modal-header">Conversión de Formatos</div>
             <p style="font-size: 0.88rem; color: var(--text-muted);">Convierte el código del panel de entrada al formato seleccionado:</p>
             <div class="convert-options-grid">
-                <button id="convertJsonToXmlBtn" class="convert-option-btn">JSON ➔ XML</button>
-                <button id="convertXmlToJsonBtn" class="convert-option-btn btn-special">XML ➔ JSON</button>
+                <button id="convertJsonToXmlBtn" class="convert-option-btn">
+                    JSON
+                    <svg class="icono-svg" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                        <polyline points="12 5 19 12 12 19"></polyline>
+                    </svg>
+                    XML
+                </button>
+                <button id="convertXmlToJsonBtn" class="convert-option-btn btn-special">
+                    XML
+                    <svg class="icono-svg" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                        <polyline points="12 5 19 12 12 19"></polyline>
+                    </svg>
+                    JSON
+                </button>
             </div>
             <button id="convertCloseBtn" class="modal-close">Cancelar</button>
         </div>
